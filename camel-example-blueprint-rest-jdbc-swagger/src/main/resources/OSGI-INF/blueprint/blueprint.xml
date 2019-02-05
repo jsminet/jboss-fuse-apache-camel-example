@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+    xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+    xmlns:prop="http://camel.apache.org/schema/placeholder"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd                                      http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd     http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.0.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.0.0.xsd">
+    <cm:property-placeholder id="bean_properties"
+        persistent-id="bean_properties" update-strategy="reload">
+        <cm:default-properties>
+            <cm:property name="jdbcUrl" value="jdbc:h2:tcp://localhost/~/test"/>
+            <cm:property name="username" value="sa"/>
+        </cm:default-properties>
+    </cm:property-placeholder>
+    <bean class="com.zaxxer.hikari.HikariDataSource" id="myDatasource" scope="singleton">
+        <property name="jdbcUrl" value="${jdbcUrl}"/>
+        <property name="username" value="${username}"/>
+    </bean>
+    <camelContext id="camel_swagger" xmlns="http://camel.apache.org/schema/blueprint">
+        <propertyPlaceholder location="camel_properties.properties"/>
+        <restConfiguration apiContextListing="true"
+            apiContextPath="api-docs" bindingMode="json"
+            component="jetty" contextPath="swagger" enableCORS="true"
+            host="{{hostname}}" port="{{port}}">
+            <!-- setup swagger api descriptions -->
+            <apiProperty key="base.path" value="rest"/>
+            <apiProperty key="api.version" value="1.2.3"/>
+            <apiProperty key="api.title" value="User Services"/>
+            <apiProperty key="api.description" value="Camel Rest Example with Swagger that provides an User REST service"/>
+            <apiProperty key="api.contact.name" value="The Apache Camel team"/>
+        </restConfiguration>
+        <rest id="rest-8c2624d0-65a0-4e4d-be07-36173a801dda"
+            path="/rest" skipBindingOnErrorCode="true">
+            <get id="41d891cf-2d65-4d47-97f9-0840d7bf8440"
+                method="getCustomer" routeId="getCustomer" uri="customer/{id}">
+                <description>direct:getcustomer</description>
+                <param description="The user id" name="id" type="path"/>
+                <to uri="direct:getcustomer"/>
+            </get>
+        </rest>
+        <route id="_route1">
+            <from id="_to1" uri="direct:getcustomer"/>
+            <setBody id="_setBody1">
+                <constant>select * from customers where id = :?id</constant>
+            </setBody>
+            <to id="_to2" uri="jdbc:myDatasource?useHeadersAsParameters=true"/>
+        </route>
+    </camelContext>
+</blueprint>
