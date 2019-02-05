@@ -1,5 +1,5 @@
-#Red hat fuse developper
-##camel-example-blueprint-rest-jdbc-swagger
+# Red hat fuse developper
+## camel-example-blueprint-rest-jdbc-swagger
 An apache camel route using blueprint and fuse graphical editor, it's using these components/technologies
 * Rest webservice endpoint 
 * Fetch records into a H2 database 
